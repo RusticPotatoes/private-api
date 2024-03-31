@@ -46,6 +46,7 @@ class ScraperDataRepo(AbstractAPI):
         if label_id:
             sql = sql.where(player.label_id == label_id)
 
+        sql = sql.order_by(player.id.asc())
         sql = sql.limit(limit)
 
         async with self.session:

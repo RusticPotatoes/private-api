@@ -54,13 +54,14 @@ async def get_highscore_latest_v2(
     )
 
     for d in data:
+        scraper_id = d.pop("scraper_id")
         d["Player_id"] = d.pop("player_id")
-        d["id"] = d.pop("scraper_id")
+        d["id"] = scraper_id
         d["timestamp"] = d.pop("created_at")
         d["ts_date"] = d.pop("record_date")
 
-        skills = await repo_skills.select(scraper_id=d.get("scraper_id"))
-        activities = await repo_activities.select(scraper_id=d.get("scraper_id"))
+        skills = await repo_skills.select(scraper_id=scraper_id)
+        activities = await repo_activities.select(scraper_id=scraper_id)
 
         for skill in skills:
             d[skill.get("skill_name")] = skill.get("skill_value")
@@ -70,4 +71,3 @@ async def get_highscore_latest_v2(
 
     data = [{k: v for k, v in d.items() if v} for d in data]
     return [PlayerHiscoreData(**d).model_dump(mode="json") for d in data]
-

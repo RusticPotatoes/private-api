@@ -2,6 +2,8 @@ import json
 import logging
 import sys
 
+from src.core.config import settings
+
 # # log formatting
 formatter = logging.Formatter(
     json.dumps(
@@ -29,11 +31,11 @@ logging.basicConfig(level=logging.DEBUG, handlers=handlers)
 # logging.getLogger("aiomysql").setLevel(logging.ERROR)
 # logging.getLogger("aiokafka").setLevel(logging.WARNING)
 
-# if settings.ENV == "PRD":
-#     uvicorn_error = logging.getLogger("uvicorn.error")
-#     uvicorn_error.disabled = True
-#     uvicorn_access = logging.getLogger("uvicorn.access")
-#     uvicorn_access.disabled = True
+if settings.ENV == "PRD":
+    uvicorn_error = logging.getLogger("uvicorn.error")
+    uvicorn_error.disabled = True
+    uvicorn_access = logging.getLogger("uvicorn.access")
+    uvicorn_access.disabled = True
 
 # # https://github.com/aio-libs/aiomysql/issues/103
 # # https://github.com/coleifer/peewee/issues/2229
