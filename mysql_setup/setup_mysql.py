@@ -3,12 +3,15 @@ import random
 from datetime import datetime, timedelta
 
 from sqlalchemy import (
+    TIMESTAMP,
+    BigInteger,
     Boolean,
     Column,
     Date,
     DateTime,
     ForeignKey,
     Integer,
+    SmallInteger,
     String,
     create_engine,
     func,
@@ -104,6 +107,34 @@ class PlayerActivities(Base):
     activity_value = Column(Integer, nullable=False, default=0)
 
 
+class Report(Base):
+    __tablename__ = "Reports"
+
+    ID = Column(BigInteger, primary_key=True, autoincrement=True)
+    created_at = Column(TIMESTAMP)
+    reportedID = Column(Integer)
+    reportingID = Column(Integer)
+    region_id = Column(Integer)
+    x_coord = Column(Integer)
+    y_coord = Column(Integer)
+    z_coord = Column(Integer)
+    timestamp = Column(TIMESTAMP)
+    manual_detect = Column(SmallInteger)
+    on_members_world = Column(Integer)
+    on_pvp_world = Column(SmallInteger)
+    world_number = Column(Integer)
+    equip_head_id = Column(Integer)
+    equip_amulet_id = Column(Integer)
+    equip_torso_id = Column(Integer)
+    equip_legs_id = Column(Integer)
+    equip_boots_id = Column(Integer)
+    equip_cape_id = Column(Integer)
+    equip_hands_id = Column(Integer)
+    equip_weapon_id = Column(Integer)
+    equip_shield_id = Column(Integer)
+    equip_ge_value = Column(BigInteger)
+
+
 # Define other SQLAlchemy models for remaining tables in a similar manner
 
 # Create an engine and bind the base
@@ -121,116 +152,155 @@ def random_date():
 
 
 class Labels(Base):
-    __tablename__ = "labels"
+    __tablename__ = "Labels"
 
     id = Column(Integer, primary_key=True)
     label = Column(String)
 
 
-# Insert 'request_highscores' and 'verify_ban' into the labels table
-labels_to_insert = ["request_highscores", "verify_ban"]
-for label_name in labels_to_insert:
-    # Check if the label already exists
-    existing_label = session.query(Labels).filter_by(label=label_name).first()
-    if not existing_label:
-        label = Labels(label=label_name)
-        session.add(label)
-session.commit()
+def get_labels():
+    # Query the labels table to get all id values
+    label_ids = session.query(Labels.id).all()
+    label_ids = [id[0] for id in label_ids]  # Convert list of tuples to list of ids
+    return label_ids
 
-# Query the labels table to get all id values
-label_ids = session.query(Labels.id).all()
-label_ids = [id[0] for id in label_ids]  # Convert list of tuples to list of ids
 
-# Insert data into Players table
-len_players = 250
-for i in range(250):
-    print(f"Player_{i}")
-    # Check if the player already exists
-    existing_player = session.query(Players).filter_by(name=f"Player_{i}").first()
-    if not existing_player:
-        player = Players(
-            name=f"Player_{i}",
-            created_at=random_date(),
-            updated_at=random_date(),
-            possible_ban=random.choice([True, False]),
-            confirmed_ban=random.choice([True, False]),
-            confirmed_player=random.choice([True, False]),
-            label_id=random.choice(label_ids),  # Select a random id from label_ids
-            label_jagex=random.randint(0, 2),
-            normalized_name=f"Player_{i}",
-        )
-        session.add(player)
-session.commit()
+def insert_players(len_players, label_ids: list):
+    # Insert data into Players table
+    for i in range(len_players):
+        print(f"Player_{i}")
+        # Check if the player already exists
+        existing_player = session.query(Players).filter_by(name=f"Player_{i}").first()
+        if not existing_player:
+            player = Players(
+                name=f"Player_{i}",
+                created_at=random_date(),
+                updated_at=random_date(),
+                possible_ban=random.choice([True, False]),
+                confirmed_ban=random.choice([True, False]),
+                confirmed_player=random.choice([True, False]),
+                label_id=random.choice(label_ids),  # Select a random id from label_ids
+                label_jagex=random.randint(0, 2),
+                normalized_name=f"Player_{i}",
+            )
+            session.add(player)
+    session.commit()
+    return
 
-# Insert data into Activities table before PlayerActivities
-activity_names = [f"Activity_{i}" for i in range(1, 71)]
-for activity_name in activity_names:
-    # Check if the activity already exists
-    existing_activity = (
-        session.query(Activities).filter_by(activity_name=activity_name).first()
-    )
-    if not existing_activity:
-        activity = Activities(activity_name=activity_name)
-        session.add(activity)
-session.commit()
 
-skill_list = list(range(2, 24))
-activity_list = list(range(1, 71))
+def get_skills():
+    # Query the skills table to get all id values
+    skill_ids = session.query(Skills.skill_id).all()
+    skill_ids = [id[0] for id in skill_ids]  # Convert list of tuples to list of ids
+    return skill_ids
 
-len_scraper_data = len_players * 3
 
-# Insert data into Skills table before PlayerSkills
-skill_names = [f"Skill_{i}" for i in range(1, 24)]
-for skill_name in skill_names:
-    # Check if the skill already exists
-    existing_skill = session.query(Skills).filter_by(skill_name=skill_name).first()
-    if not existing_skill:
-        skill = Skills(skill_name=skill_name)
-        session.add(skill)
-session.commit()
+def get_activities():
+    # Query the activity table to get all id values
+    activity_ids = session.query(Activities.activity_id).all()
+    activity_ids = [
+        id[0] for id in activity_ids
+    ]  # Convert list of tuples to list of ids
+    return activity_ids
 
-# Query the skills table to get all id values
-skill_ids = session.query(Skills.skill_id).all()
-skill_ids = [id[0] for id in skill_ids]  # Convert list of tuples to list of ids
 
-for i in range(1, len_scraper_data + 1):
-    print(f"scraper_data_{i}")
-    # pick random player
-    player_id = random.randint(1, len_players)
+def insert_scraper_data(len_scraper_data, len_players, skill_ids, activity_ids):
+    for i in range(1, len_scraper_data + 1):
+        print(f"scraper_data_{i}")
+        # pick random player
+        player_id = random.randint(1, len_players)
 
-    # pick random amount of skills
-    amount_skills = random.randint(0, len(skill_ids))
-    random.shuffle(skill_ids)
-    skills = skill_ids[:amount_skills]
+        # pick random amount of skills
+        amount_skills = random.randint(0, len(skill_ids))
+        random.shuffle(skill_ids)
+        skills = skill_ids[:amount_skills]
 
-    # pick random amount of activities
-    amount_activities = random.randint(0, len(activity_list))
-    random.shuffle(activity_list)
-    activities = activity_list[:amount_activities]
+        # pick random amount of activities
+        amount_activities = random.randint(0, len(activity_ids))
+        random.shuffle(activity_ids)
+        activities = activity_ids[:amount_activities]
 
-    # scraper data
-    try:
-        session.add(
-            ScraperData(scraper_id=i, player_id=player_id, created_at=random_date())
-        )
-        session.commit()
-        for skill in skills:
+        # scraper data
+        try:
             session.add(
-                PlayerSkills(
-                    scraper_id=i,
-                    skill_id=skill,
-                    skill_value=random.randint(1, 200_000_000),
+                ScraperData(scraper_id=i, player_id=player_id, created_at=random_date())
+            )
+            session.commit()
+            for skill in skills:
+                session.add(
+                    PlayerSkills(
+                        scraper_id=i,
+                        skill_id=skill,
+                        skill_value=random.randint(1, 200_000_000),
+                    )
+                )
+            for activity in activities:
+                session.add(
+                    PlayerActivities(
+                        scraper_id=i,
+                        activity_id=activity,
+                        activity_value=random.randint(1, 65_000),
+                    )
+                )
+        except IntegrityError:
+            session.rollback()  # Rollback the transaction if a duplicate entry is encountered
+        finally:
+            session.commit()
+
+
+def insert_reports(len_reports, len_players):
+    for i in range(1, len_reports + 1):
+        print(f"Report_{i}")
+        # pick random player
+        reporter = random.randint(1, len_players)
+        reported = random.randint(1, len_players)
+
+        if reporter == reported:
+            reported = random.randint(1, len_players)
+
+        try:
+            session.add(
+                Report(
+                    created_at=random_date(),
+                    reportedID=reporter,
+                    reportingID=reported,
+                    region_id=random.randint(1, 30000),
+                    x_coord=random.randint(1, 30000),
+                    y_coord=random.randint(1, 30000),
+                    z_coord=random.randint(1, 30000),
+                    timestamp=random_date(),
+                    manual_detect=random.choice([0, 1]),
+                    on_members_world=random.choice([0, 1]),
+                    on_pvp_world=random.choice([0, 1]),
+                    world_number=random.randint(1, 300),
+                    equip_head_id=random.randint(1, 30000),
+                    equip_amulet_id=random.randint(1, 30000),
+                    equip_torso_id=random.randint(1, 30000),
+                    equip_legs_id=random.randint(1, 30000),
+                    equip_boots_id=random.randint(1, 30000),
+                    equip_cape_id=random.randint(1, 30000),
+                    equip_hands_id=random.randint(1, 30000),
+                    equip_weapon_id=random.randint(1, 30000),
+                    equip_shield_id=random.randint(1, 30000),
+                    equip_ge_value=random.randint(1, 2000000000),
                 )
             )
-        for activity in activities:
-            session.add(
-                PlayerActivities(
-                    scraper_id=i,
-                    activity_id=activity,
-                    activity_value=random.randint(1, 65_000),
-                )
-            )
-    except IntegrityError:
-        session.rollback()  # Rollback the transaction if a duplicate entry is encountered
-    finally:
-        session.commit()
+        except IntegrityError:
+            session.rollback()  # Rollback the transaction if a duplicate entry is encountered
+        finally:
+            session.commit()
+
+
+def main():
+    len_players = 250
+    label_ids = get_labels()
+    insert_players(len_players, label_ids)
+    skill_ids = get_skills()
+    activity_ids = get_activities()
+    len_scraper_data = len_players * 3
+    insert_scraper_data(len_scraper_data, len_players, skill_ids, activity_ids)
+    insert_reports(len_reports=10000, len_players=len_players)
+
+
+if __name__ == "__main__":
+    main()

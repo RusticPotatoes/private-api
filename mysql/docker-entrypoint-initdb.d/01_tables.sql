@@ -473,3 +473,11 @@ BEGIN
 END //
 
 DELIMITER ;
+
+CREATE TABLE `Labels` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `label` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `Unique_label` (`label`) USING BTREE
+)
+;

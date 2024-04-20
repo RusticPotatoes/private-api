@@ -1,4 +1,3 @@
-version: '3'
 services:
   mysql:
     container_name: database
@@ -58,8 +57,11 @@ services:
     volumes:
       - ./src:/project/src
     depends_on:
-      - mysql
-      - mysql_setup
+      mysql:
+        condition: service_healthy
+      mysql_setup:
+        condition: service_completed_successfully
+
 
 networks:
   botdetector-network:
