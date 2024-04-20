@@ -31,7 +31,7 @@ class ScraperDataRepo(AbstractAPI):
         )
         player = aliased(Player, name="pl")
 
-        sql = Select(table)
+        sql = Select(player.name, table)
         sql = sql.join(player, table.player_id == player.id)
 
         if player_id:
@@ -46,13 +46,15 @@ class ScraperDataRepo(AbstractAPI):
         if label_id:
             sql = sql.where(player.label_id == label_id)
 
-        sql = sql.order_by(player.id.asc())
+        sql = sql.order_by(table.player_id.asc())
+        # sql = sql.order_by(player.id.asc()) # not performant
         sql = sql.limit(limit)
 
         async with self.session:
             result: AsyncResult = await self.session.execute(sql)
-            result = result.scalars().all()
-        return jsonable_encoder(result)
+            result = result.fetchall()
+        data = [{"name": name, **jsonable_encoder(r)} for name, r in result]
+        return data
 
     async def select_history(self, player_name: str, player_id: int, many: bool):
         table = ScraperData

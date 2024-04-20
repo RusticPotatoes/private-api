@@ -10,6 +10,7 @@ class PlayerHiscoreData(BaseModel):
     id: Optional[int] = None
     timestamp: datetime = None
     ts_date: Optional[date] = None
+    name: str
     Player_id: int
     total: int = 0
     attack: int = 0

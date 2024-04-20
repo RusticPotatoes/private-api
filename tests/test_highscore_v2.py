@@ -49,6 +49,7 @@ async def test_highscore_latest_v2(custom_client):
             "timestamp",
             "ts_date",
             "Player_id",
+            "name",
             "total",
             "attack",
             "defence",

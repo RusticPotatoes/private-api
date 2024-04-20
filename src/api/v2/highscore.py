@@ -53,6 +53,7 @@ async def get_highscore_latest_v2(
         history=False,
     )
 
+    logger.info(data[0])
     for d in data:
         scraper_id = d.pop("scraper_id")
         d["Player_id"] = d.pop("player_id")
